@@ -1,5 +1,5 @@
 <?php
-  require_once('Model.php');
+
   class User extends Model {
 
     // Register new User
@@ -19,6 +19,44 @@
       }
     }
 
+    // User log in processing
+    public function login($email, $password) {
+      $this->db->query('SELECT * FROM users WHERE email = :email');
+      $this->db->bind(':email', $email);
+
+      // Fetching a single user by email 
+      $row = $this->db->single();
+
+      // Checking if user exists
+      if ($this->db->rowCount() > 0) {
+        // does exist
+
+        // Since password is encrypted in database
+        $hashed_password = $row->password;
+        // Checking if password is matched
+        if (password_verify($password, $hashed_password)) {
+          // did match, so sending user row
+          return $row;
+        }
+
+      }
+
+      // does not exist
+      return false;
+    }
+
+    // Get user by id
+    public function get_user_by_id($id) {
+      $this->db->query('SELECT * FROM users WHERE id = :id');
+      $this->db->bind(':id', $id);
+
+      // Fetching a single user by id 
+      $row = $this->db->single();
+
+      // returning user
+      return $row;
+    }
+
     // Check user existance from email
     public function check_user_existance_from_email($email) {
 
@@ -32,11 +70,10 @@
       if ($this->db->rowCount() > 0) {
         // does exist
         return true;
-      } else {
-        // does not exist
-        return false;
       }
-      
+
+      // does not exist
+      return false;
     }
 
   }

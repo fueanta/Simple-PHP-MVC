@@ -1,11 +1,11 @@
 // config for js
-const URLROOT = 'http://localhost/office_mvc/';
+const URLROOT = 'http://localhost/simple_php_mvc/';
 
 // highlight current page on navbar
 $(function () {
     // this will get the full URL at the address bar
     var url = window.location.href;
-
+    
     // passes on every "a" tag
     $("#nav-tool ul li a").each(function () {
         // checks if its the same on the address bar

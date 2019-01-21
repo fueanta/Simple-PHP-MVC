@@ -90,9 +90,16 @@
       }
     }
 
-    // this function dynamically loads the view resource
-    private function view_path($method_name, $data_array = null) {
-      $this->view(__CLASS__ . '/' . $method_name, $data_array);
+    public function information() {
+
+      $data_array = [
+        // list of data to be sent
+        'Name' => $_SESSION['user_name'],
+        'Email' => $_SESSION['user_email']
+      ];
+
+      // display user information
+      $this->view_path(__FUNCTION__, $data_array);
     }
 
     // this function validates register form data
@@ -100,12 +107,12 @@
       
       // Validate Name
       if(empty($data_array['name'])) {
-        $data_array['name_err'] = 'Pleae enter your name';
+        $data_array['name_err'] = 'Please enter your name';
       }
 
       // Validate Email
       if(empty($data_array['email'])) {
-        $data_array['email_err'] = 'Pleae enter your email';
+        $data_array['email_err'] = 'Please enter your email';
       } else {
         // checking if email does exist
         if ($this->userModel->check_user_existance_from_email($data_array['email'])) {
@@ -115,14 +122,14 @@
 
       // Validate Password
       if(empty($data_array['password'])) {
-        $data_array['password_err'] = 'Pleae enter a password';
+        $data_array['password_err'] = 'Please enter a password';
       } elseif(strlen($data_array['password']) < $this->min_pass_length){
         $data_array['password_err'] = 'Password must be at least ' . $this->min_pass_length . ' characters long';
       }
 
       // Validate Confirm Password
       if(empty($data_array['confirm_password'])) {
-        $data_array['confirm_password_err'] = 'Pleae confirm your password';
+        $data_array['confirm_password_err'] = 'Please confirm your password';
       } else {
         if($data_array['password'] != $data_array['confirm_password']) {
           $data_array['confirm_password_err'] = 'Passwords do not match';
@@ -139,7 +146,7 @@
         // save / register user
         if ($this->userModel->register($data_array)) {
           flash('register_success', 'You are now registered and eligible to log in.');
-          redirect('users/login');
+          $this->view_path('login');
         } else {
           die('Could not be registered!');
         }
@@ -156,7 +163,7 @@
 
       // Validate Email
       if(empty($data_array['email'])) {
-        $data_array['email_err'] = 'Pleae enter your email';
+        $data_array['email_err'] = 'Please enter your email';
       }
 
       // Validate Password
@@ -166,13 +173,58 @@
 
       // Making sure errors are empty
       if(empty($data_array['email_err']) && empty($data_array['password_err'])) {
-        // Validated
-        die('Success');
+        // Validated, now checking login credentials
+        $loggedInUser = $this->userModel->login($data_array['email'], $data_array['password']);
+
+        if ($loggedInUser) {
+          // create session
+          $this->createUserSession($loggedInUser);
+        }
+        else {
+          flash('invalid_credentials', 'Invalid email or password.', 'alert alert-danger');
+          $this->view_path('login');
+        }
+
       } else {
         // Load view with errors
         $this->view_path('login', $data_array);
       }
 
+    }
+
+    // putting user values into session
+    public function createUserSession($user) {
+      $_SESSION['user_id'] = $user->id;
+      $_SESSION['user_name'] = $user->name;
+      $_SESSION['user_email'] = $user->email;
+      
+      redirect('pages/index');
+    }
+
+    // User log out processing
+    public function logout() {
+
+      //releasing sessions
+      unset($_SESSION['user_id']);
+      unset($_SESSION['user_name']);
+      unset($_SESSION['user_email']);
+      session_destroy();
+
+      // redirecting to login page of same controller
+      $this->view_path('login');
+    }
+
+    // check if any user is logged in
+    public function isLoggedIn() {
+      if (isset($_SESSION['user_id'])) {
+        return true;
+      }
+      else return false;
+    }
+
+    // this function dynamically loads the view resource
+    private function view_path($method_name, $data_array = null) {
+      $this->view(__CLASS__ . '/' . $method_name, $data_array);
     }
 
   }

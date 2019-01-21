@@ -8,6 +8,9 @@
     
     // loads model
     public function model($model) {
+      // do require base model for db ref.
+      require_once '../app/models/Model.php';
+      
       // do require model file
       require_once '../app/models/' . $model . '.php';
 
